@@ -179,3 +179,18 @@ h1 {
 
   background: #d8eaf8;
 }
+
+.person-button.selected {
+  outline: 2px solid #333;
+  outline-offset: 2px;
+}
+
+.editing-message {
+  margin-top: 12px;
+  font-size: 13px;
+  color: #777;
+}
+
+.editing-message strong {
+  color: #333;
+}

@@ -1,18 +1,28 @@
+import { useState } from "react";
 import "./App.css";
 import backgroundImage from "./assets/flowerback.jpg";
+
+type Person = {
+  name: string;
+  color: string;
+};
+
+type Availability = {
+  [date: string]: string[];
+};
 
 const people = [
   {
     name: "Yasmin",
-    color: "#9b87f5",
+    color: "#fcc7d5",
   },
   {
     name: "Zara",
-    color: "#73c991",
+    color: "#b4e2c4",
   },
   {
     name: "Yuta",
-    color: "#f2c94c",
+    color: "#fff5d7",
   },
 ];
 
@@ -44,6 +54,7 @@ function getMonthsFromCurrentMonth() {
     months.push({
       name: monthName,
       year: year,
+      monthIndex: monthIndex,
       days: daysInMonth,
     });
   }
@@ -54,6 +65,77 @@ function getMonthsFromCurrentMonth() {
 const months = getMonthsFromCurrentMonth();
 
 function App() {
+  const [selectedPerson, setSelectedPerson] =
+    useState<Person>(people[0]);
+
+  const [availability, setAvailability] = 
+    useState<Availability>({});
+
+  function toggleDate(dateKey: string) {
+    setAvailability((currentAvailability) => {
+      const peopleForDate =
+        currentAvailability[dateKey] || []; //check the date toggled if ada orang or empty
+
+      const personAlreadySelected =
+        peopleForDate.includes(selectedPerson.name); //tanya if the current person is in the list, produce bool
+
+      let updatedPeople;
+
+      if (personAlreadySelected) {
+        updatedPeople = peopleForDate.filter( //filter fx go tru every name and ONLY KEEP names that pass condition
+          (name) => name !== selectedPerson.name
+        );
+      } else {
+        updatedPeople = [
+          ...peopleForDate, //...is called spread operator which means take everything already inside this array and copy it here
+          selectedPerson.name,
+        ];
+      }
+
+      return {
+        ...currentAvailability,
+        [dateKey]: updatedPeople, //overwrites only the clicked date
+      };
+    });
+  }
+
+  function getDayBackground(dateKey: string) {
+    const availablePeople =
+      availability[dateKey] || [];
+
+    if (availablePeople.length === 0) {
+      return "#ffffff";
+    }
+
+    const colors = availablePeople
+      .map((personName) => {
+        return people.find(
+          (person) => person.name === personName
+        )?.color;
+      })
+      .filter(Boolean) as string[];
+
+    if (colors.length === 1) {
+      return colors[0];
+    }
+
+    const sectionSize = 100 / colors.length;
+
+    const gradientSections = colors
+      .map((color, index) => {
+        const start = index * sectionSize;
+        const end = (index + 1) * sectionSize;
+
+        return `${color} ${start}% ${end}%`;
+      })
+      .join(", ");
+
+    return `linear-gradient(
+      135deg,
+      ${gradientSections}
+    )`;
+  }
+
   return (
     <main className="page" style={{ backgroundImage: `url(${backgroundImage})` }}>
 
@@ -65,7 +147,15 @@ function App() {
         </div>
         <div className="people-list">
             {people.map((person) => (
-              <button className="person-button" key={person.name}>
+              <button
+                className={`person-button ${
+                  selectedPerson.name === person.name
+                    ? "selected"
+                    : ""
+                }`}
+                key={person.name}
+                onClick={() => setSelectedPerson(person)}
+              >
                 <span
                   className="person-icon"
                   style={{ backgroundColor: person.color }}
@@ -79,6 +169,9 @@ function App() {
               + Add person
             </button>
         </div>
+        <p className="editing-message">
+          Editing <strong>{selectedPerson.name}</strong>
+        </p>
       </section>
 
       <section className="calendar-card">
@@ -105,14 +198,30 @@ function App() {
               <div className="days">
                 {Array.from(
                   { length: month.days },
-                  (_, index) => (
-                    <button
-                      className="day"
-                      key={index}
-                    >
-                      {index + 1}
-                    </button>
-                  )
+                  (_, index) => {
+                    const day = index + 1;
+
+                    const dateKey = `${month.year}-${String(
+                      month.monthIndex + 1
+                    ).padStart(2, "0")}-${String(day).padStart(
+                      2,
+                      "0"
+                    )}`;
+
+                    return (
+                      <button
+                        className="day"
+                        key={dateKey}
+                        onClick={() => toggleDate(dateKey)}
+                        style={{
+                          background:
+                            getDayBackground(dateKey),
+                        }}
+                      >
+                        {day}
+                      </button>
+                    );
+                  }
                 )}
               </div>
 
