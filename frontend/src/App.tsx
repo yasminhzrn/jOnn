@@ -1,6 +1,7 @@
 import { useState } from "react";
 import "./App.css";
 import backgroundImage from "./assets/flowerback.jpg";
+import { supabase } from "./supabaseClient";
 
 type Person = {
   name: string;
@@ -136,6 +137,15 @@ function App() {
     )`;
   }
 
+  async function testConnection() {
+    const { data, error } = await supabase
+      .from("people")
+      .select("*");
+
+    console.log("DATA:", data);
+    console.log("ERROR:", error);
+  }
+
   return (
     <main className="page" style={{ backgroundImage: `url(${backgroundImage})` }}>
 
@@ -144,6 +154,9 @@ function App() {
           <h1>
             Members
           </h1>
+          <button onClick={testConnection}>
+            Test Supabase
+          </button>
         </div>
         <div className="people-list">
             {people.map((person) => (
